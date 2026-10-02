@@ -13,8 +13,12 @@ import webpush from 'https://esm.sh/web-push@3.6.7'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-const VAPID_PUBLIC = Deno.env.get('VAPID_PUBLIC_KEY')!
-const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY')!
+// Prefixed (not VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY) — this Supabase project
+// is shared with lulu's send-reminders function, and `supabase secrets set`
+// is project-wide, not per-function. Unprefixed names here previously
+// collided with and overwrote lulu's live VAPID keypair.
+const VAPID_PUBLIC = Deno.env.get('JAJANAN_VAPID_PUBLIC_KEY')!
+const VAPID_PRIVATE = Deno.env.get('JAJANAN_VAPID_PRIVATE_KEY')!
 const VAPID_EMAIL = 'mailto:dhanifudin@gmail.com'
 
 webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC, VAPID_PRIVATE)

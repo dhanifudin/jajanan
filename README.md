@@ -72,9 +72,13 @@ stock.
 npx web-push generate-vapid-keys
 ```
 Put the public key in `.env` (`VITE_VAPID_PUBLIC_KEY`) and GitHub secrets;
-put both keys in the Edge Function secrets:
+put both keys in the Edge Function secrets **under prefixed names** — this
+Supabase project is shared with `lulu`'s own `send-reminders` function, and
+`supabase secrets set` is project-wide, not per-function. Using the
+unprefixed `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` here would silently
+overwrite lulu's live keypair:
 ```bash
-supabase secrets set VAPID_PUBLIC_KEY=... VAPID_PRIVATE_KEY=...
+supabase secrets set JAJANAN_VAPID_PUBLIC_KEY=... JAJANAN_VAPID_PRIVATE_KEY=...
 ```
 
 The `notify-favorite-stock` Edge Function is called by a DB trigger
