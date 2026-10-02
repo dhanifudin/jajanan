@@ -1,0 +1,2 @@
+-- Stub: version 002 was applied by another app (bomi/lulu) on this shared instance.
+-- No-op for jajanan — kept so supabase db push does not error on missing version.
