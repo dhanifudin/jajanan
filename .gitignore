@@ -1,0 +1,22 @@
+node_modules/
+dist/
+dev-dist/
+.env
+.env.local
+.env.*.local
+*.local
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Supabase
+.supabase/
+supabase/.temp/
+supabase/.env.functions
