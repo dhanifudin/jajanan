@@ -35,16 +35,21 @@ export const useCatalogStore = defineStore('catalog', () => {
     loading.value = false
   }
 
-  /** Cheapest unit price for `qty` units — mirrors jajanan.create_order()'s tier pick. */
-  function priceForQty(snack: Snack, qty: number): number | null {
-    const eligible = snack.price_tiers.filter(t => t.min_qty <= qty)
+  /**
+   * Cheapest unit price for `qty` units — mirrors jajanan.create_order()'s
+   * tier pick. `isMember` must match the buyer's actual login state: the
+   * RPC excludes member_only tiers for guests, so showing one here to a
+   * guest would display a price the server then refuses to charge.
+   */
+  function priceForQty(snack: Snack, qty: number, isMember: boolean): number | null {
+    const eligible = snack.price_tiers.filter(t => t.min_qty <= qty && (!t.member_only || isMember))
     if (eligible.length === 0) return null
     return Math.min(...eligible.map(t => t.unit_price))
   }
 
   /** Cheapest listed single-unit price, for the catalog card. */
-  function startingPrice(snack: Snack): number | null {
-    return priceForQty(snack, 1)
+  function startingPrice(snack: Snack, isMember: boolean): number | null {
+    return priceForQty(snack, 1, isMember)
   }
 
   // ── Admin mutations ──────────────────────────────────────────────────

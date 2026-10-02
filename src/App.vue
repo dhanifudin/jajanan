@@ -13,18 +13,19 @@
 
     <template v-else>
       <RouterView />
-      <BottomNav v-if="auth.isLoggedIn" />
+      <BottomNav v-if="route.name !== 'login'" />
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import { RouterView } from 'vue-router'
+import { RouterView, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import BottomNav from '@/components/BottomNav.vue'
 
 const auth = useAuthStore()
+const route = useRoute()
 
 const isOnline = ref(navigator.onLine)
 function onOnline() { isOnline.value = true }

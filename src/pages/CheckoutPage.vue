@@ -46,7 +46,7 @@
       <template v-else>
         <div class="card flex flex-col items-center text-center gap-3">
           <p class="text-sm text-cocoa-700/60">Scan dengan GoPay / aplikasi bank / e-wallet apapun</p>
-          <QrCode v-if="confirmedOrder.qris_payload" :value="confirmedOrder.qris_payload" />
+          <QrCode v-if="dynamicQris" :value="dynamicQris" />
           <p v-else class="text-sm text-amber-700 bg-amber-100 rounded-2xl p-3">
             QRIS belum diatur admin. Tunjukkan layar ini ke penjual untuk bayar manual.
           </p>
@@ -56,26 +56,61 @@
           <p class="text-xs text-cocoa-700/50">Pesanan menunggu konfirmasi penjual setelah dibayar.</p>
         </div>
 
-        <RouterLink to="/orders" class="btn-secondary w-full justify-center">Lihat status pesanan</RouterLink>
+        <!-- Best-effort app open — mobile only. Can't hand off the QR/amount
+             without a payment gateway, so this just opens GoPay if installed;
+             the QR above stays the reliable path either way. -->
+        <div class="md:hidden space-y-1">
+          <button @click="tryOpenGoPay" class="btn-secondary w-full justify-center">
+            📱 Buka GoPay
+          </button>
+          <p class="text-xs text-cocoa-700/40 text-center">
+            Hanya membuka aplikasi — scan QR di atas untuk bayar.
+          </p>
+          <p v-if="gopayMsg" class="text-xs text-amber-600 text-center">{{ gopayMsg }}</p>
+        </div>
+
+        <RouterLink v-if="auth.isLoggedIn" to="/orders" class="btn-secondary w-full justify-center">
+          Lihat status pesanan
+        </RouterLink>
       </template>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
 import { useOrdersStore, type Order } from '@/stores/orders'
+import { useSettingsStore } from '@/stores/settings'
+import { toDynamicQris } from '@/lib/qris'
 import QrCode from '@/components/QrCode.vue'
 
 const router = useRouter()
+const auth = useAuthStore()
 const cart = useCartStore()
 const orders = useOrdersStore()
+const settings = useSettingsStore()
 
 const submitting = ref(false)
 const errorMsg = ref('')
 const confirmedOrder = ref<Order | null>(null)
+const gopayMsg = ref('')
+
+onMounted(() => {
+  if (!settings.storeSettings) settings.fetchSettings()
+})
+
+const dynamicQris = computed(() => {
+  const payload = settings.storeSettings?.qris_static_payload
+  if (!payload || !confirmedOrder.value) return null
+  try {
+    return toDynamicQris(payload, confirmedOrder.value.total_amount)
+  } catch {
+    return null
+  }
+})
 
 async function submitOrder() {
   submitting.value = true
@@ -89,6 +124,18 @@ async function submitOrder() {
   } finally {
     submitting.value = false
   }
+}
+
+function tryOpenGoPay() {
+  gopayMsg.value = ''
+  const hiddenAt = Date.now()
+  window.location.href = 'gojek://gopay/home'
+  setTimeout(() => {
+    // Still here and page never lost focus → app likely isn't installed.
+    if (document.visibilityState === 'visible' && Date.now() - hiddenAt > 1200) {
+      gopayMsg.value = 'GoPay tidak ditemukan di perangkat ini.'
+    }
+  }, 1500)
 }
 
 function back() {

@@ -11,7 +11,7 @@
           <p class="font-semibold text-cocoa-700 truncate">{{ snack.name }}</p>
           <p v-if="snack.description" class="text-xs text-cocoa-700/60 truncate">{{ snack.description }}</p>
         </div>
-        <button @click="favorites.toggle(snack.id)"
+        <button v-if="auth.isLoggedIn" @click="favorites.toggle(snack.id)"
                 class="text-xl flex-shrink-0 min-w-[32px] min-h-[32px] active:scale-90 transition-transform">
           {{ favorites.isFavorite(snack.id) ? '⭐' : '☆' }}
         </button>
@@ -42,15 +42,17 @@ import type { Snack } from '@/stores/catalog'
 import { useCatalogStore } from '@/stores/catalog'
 import { useCartStore } from '@/stores/cart'
 import { useFavoritesStore } from '@/stores/favorites'
+import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps<{ snack: Snack }>()
 
 const catalog = useCatalogStore()
 const cart = useCartStore()
 const favorites = useFavoritesStore()
+const auth = useAuthStore()
 
 const qty = computed(() => cart.qtyOf(props.snack.id))
-const startingPrice = computed(() => catalog.startingPrice(props.snack))
+const startingPrice = computed(() => catalog.startingPrice(props.snack, auth.isLoggedIn))
 
 function addOne() {
   if (cart.qtyOf(props.snack.id) >= props.snack.stock_quantity) return

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 import { useCatalogStore } from './catalog'
+import { useAuthStore } from './auth'
 
 const STORAGE_KEY = 'jajanan-cart'
 
@@ -45,12 +46,17 @@ export const useCartStore = defineStore('cart', () => {
     items.value = {}
   }
 
-  /** Line totals using current catalog prices (cheapest eligible tier). */
+  /**
+   * Line totals using current catalog prices (cheapest eligible tier,
+   * excluding member_only tiers for guests — matches what create_order()
+   * actually charges).
+   */
   function lines() {
     const catalog = useCatalogStore()
+    const auth = useAuthStore()
     return Object.entries(items.value).map(([snackId, qty]) => {
       const snack = catalog.snacks.find(s => s.id === snackId)
-      const unitPrice = snack ? catalog.priceForQty(snack, qty) : null
+      const unitPrice = snack ? catalog.priceForQty(snack, qty, auth.isLoggedIn) : null
       return { snackId, snack, qty, unitPrice, lineTotal: unitPrice != null ? unitPrice * qty : null }
     }).filter(l => l.snack)
   }

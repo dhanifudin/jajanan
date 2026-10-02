@@ -17,11 +17,13 @@ const router = createRouter({
       path: '/',
       name: 'catalog',
       component: () => import('@/pages/CatalogPage.vue'),
+      meta: { public: true },
     },
     {
       path: '/checkout',
       name: 'checkout',
       component: () => import('@/pages/CheckoutPage.vue'),
+      meta: { public: true },
     },
     {
       path: '/orders',

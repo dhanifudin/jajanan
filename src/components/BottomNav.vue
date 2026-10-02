@@ -28,6 +28,13 @@ const route = useRoute()
 const auth = useAuthStore()
 
 const tabs = computed(() => {
+  if (!auth.isLoggedIn) {
+    return [
+      { to: '/', icon: '🍡', label: 'Jajan' },
+      { to: '/login', icon: '👤', label: 'Masuk' },
+    ]
+  }
+
   const base = [
     { to: '/', icon: '🍡', label: 'Jajan' },
     { to: '/orders', icon: '🧾', label: 'Pesanan' },

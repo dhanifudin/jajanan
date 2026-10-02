@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen pb-28">
     <PageHeader>
-      <div class="flex items-center gap-3">
+      <div v-if="auth.isLoggedIn" class="flex items-center gap-3">
         <img v-if="auth.userAvatar" :src="auth.userAvatar" class="w-10 h-10 rounded-full border-2 border-amber-300 flex-shrink-0" />
         <div class="flex-1 min-w-0">
           <p class="text-xs text-cocoa-700/60">Halo,</p>
@@ -12,6 +12,18 @@
                        hover:text-amber-600 rounded-xl px-3 min-h-[40px] transition-all active:scale-95 border border-amber-100">
           Keluar
         </button>
+      </div>
+
+      <div v-else class="flex items-center gap-3">
+        <div class="flex-1 min-w-0">
+          <h1 class="font-display font-bold text-cocoa-700 text-xl leading-tight">🍡 Jajanan</h1>
+          <p class="text-xs text-cocoa-700/60">Jajanan Teh Upi</p>
+        </div>
+        <RouterLink to="/login"
+                    class="text-xs font-semibold bg-amber-100 hover:bg-amber-200 text-amber-700
+                           rounded-xl px-3 min-h-[40px] flex items-center transition-all active:scale-95">
+          Masuk
+        </RouterLink>
       </div>
     </PageHeader>
 

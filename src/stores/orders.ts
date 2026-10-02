@@ -1,8 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { supabase } from '@/lib/supabase'
-import { toDynamicQris } from '@/lib/qris'
-import { useSettingsStore } from './settings'
 
 export interface OrderItem {
   id: string
@@ -15,10 +13,9 @@ export interface OrderItem {
 
 export interface Order {
   id: string
-  user_id: string
+  user_id: string | null // null for guest checkouts
   status: 'pending' | 'paid' | 'cancelled'
   total_amount: number
-  qris_payload: string | null
   created_at: string
   paid_at: string | null
   order_items: OrderItem[]
@@ -29,30 +26,17 @@ export const useOrdersStore = defineStore('orders', () => {
   const pendingOrders = ref<Order[]>([]) // admin queue
   const loading = ref(false)
 
+  /**
+   * jajanan.create_order() returns the full receipt as jsonb directly —
+   * no follow-up select/update needed, so guest checkout never requires
+   * an anon RLS read policy on orders/order_items.
+   */
   async function createOrder(cartLines: { snackId: string; qty: number }[]): Promise<Order> {
-    const { data: orderId, error } = await supabase.rpc('create_order', {
+    const { data, error } = await supabase.rpc('create_order', {
       p_items: cartLines.map(l => ({ snack_id: l.snackId, qty: l.qty })),
     })
     if (error) throw error
-
-    const settings = useSettingsStore()
-    if (!settings.storeSettings) await settings.fetchSettings()
-    const staticPayload = settings.storeSettings?.qris_static_payload
-
-    const { data: order, error: fetchErr } = await supabase
-      .from('orders')
-      .select('*, order_items(*, snack:snacks(name))')
-      .eq('id', orderId)
-      .single()
-    if (fetchErr) throw fetchErr
-
-    let qrisPayload: string | null = null
-    if (staticPayload) {
-      qrisPayload = toDynamicQris(staticPayload, order.total_amount)
-      await supabase.from('orders').update({ qris_payload: qrisPayload }).eq('id', orderId)
-    }
-
-    return { ...order, qris_payload: qrisPayload } as Order
+    return data as Order
   }
 
   async function fetchMine() {
